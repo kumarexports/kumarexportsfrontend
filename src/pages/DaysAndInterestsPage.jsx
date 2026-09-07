@@ -243,7 +243,7 @@ function DaysAndInterestsPage() {
     if (!['yes', 'y', 'true', '1'].includes(esiValue)) {
       return 0
     }
-    return Number((getSourceBasicSalary(row) * 0.0075).toFixed(2))
+    return Number((getDerivedBasicSalary(row) * 0.0075).toFixed(2))
   }
 
   const getDeductionComponents = (row) => Number((
