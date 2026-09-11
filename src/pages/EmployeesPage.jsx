@@ -12,10 +12,9 @@ const REQUIRED_HEADERS = [
   'Department',
   'Company',
   'MRATE',
-  'BASIC',
+  'Gross Salary',
   'PF',
   'PFVOL',
-  'ESI',
   'TDS',
   'PROF.TAX',
 ]
@@ -117,10 +116,9 @@ function EmployeesPage() {
           department: String(record.Department ?? '').trim(),
           company: String(record.Company ?? '').trim(),
           mrate: normalizeNumber(record.MRATE),
-          basic: normalizeNumber(record.BASIC),
-          pf: normalizeNumber(record.PF),
+          basic: normalizeNumber(record['Gross Salary']),
+          pf: normalizeYesNo(record.PF),
           pfvol: normalizeNumber(record.PFVOL),
-          esi: normalizeYesNo(record.ESI),
           tds: normalizeNumber(record.TDS),
           profTax: normalizeNumber(record['PROF.TAX']),
         }
@@ -151,7 +149,6 @@ function EmployeesPage() {
             basic: row.basic,
             pf: row.pf,
             pfvol: row.pfvol,
-            esi: row.esi,
             tds: row.tds,
             profTax: row.profTax,
           })),
@@ -196,27 +193,6 @@ function EmployeesPage() {
     setViewMode(mode)
     if (mode !== 'imported' && !employees.length) {
       await loadEmployees()
-    }
-  }
-
-  const updateEmployeeEsi = async (employeeId, esiValue) => {
-    try {
-      const token = JSON.parse(localStorage.getItem('kumarexports-auth-user') || '{}')?.token
-      const response = await fetch(`${API_URL}/api/hr/employees/${employeeId}/esi`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ esi: esiValue }),
-      })
-      const data = await response.json()
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || 'Unable to update ESI value.')
-      }
-      await loadEmployees()
-    } catch (err) {
-      setSwal({ open: true, title: 'Update Failed', text: err.message || 'Unable to update ESI value.', kind: 'error' })
     }
   }
 
@@ -442,10 +418,9 @@ function EmployeesPage() {
                   <th>Department</th>
                   <th>Company</th>
                   <th>MRATE</th>
-                  <th>BASIC</th>
+                  <th>Gross Salary</th>
                   <th>PF</th>
                   <th>PFVOL</th>
-                  <th>ESI</th>
                   <th>TDS</th>
                   <th>PROF.TAX</th>
                 </tr>
@@ -475,18 +450,6 @@ function EmployeesPage() {
                       <td>{row.basic ?? ''}</td>
                       <td>{row.pf ?? ''}</td>
                       <td>{row.pfvol ?? ''}</td>
-                      <td>
-                        <select
-                          value={String(row.esi || 'No')}
-                          onChange={(event) => void updateEmployeeEsi(
-                            employees.find((employee) => String(employee.empId || '') === String(row.empId || ''))?.id,
-                            event.target.value,
-                          )}
-                        >
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                      </td>
                       <td>{row.tds ?? ''}</td>
                       <td>{row.profTax ?? ''}</td>
                     </tr>

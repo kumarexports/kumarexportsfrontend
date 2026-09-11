@@ -83,16 +83,6 @@ function DaysAndInterestsPage() {
     return map
   }, [employeeRows])
 
-  const esiByEmployeeId = useMemo(() => {
-    const map = new Map()
-    employeeRows.forEach((employee) => {
-      const value = String(employee.esiValue ?? employee.esi_value ?? '').trim().toLowerCase()
-      map.set(String(employee.id), value)
-      map.set(String(employee.empId), value)
-    })
-    return map
-  }, [employeeRows])
-
   const employeeMetaById = useMemo(() => {
     const map = new Map()
     employeeRows.forEach((employee) => {
@@ -145,6 +135,14 @@ function DaysAndInterestsPage() {
     return getStoredOrCalculated(row, ['basic_salary', 'basicSalary', 'derived_basic_salary'], () => Number((getFinalSalary(row) * 0.65).toFixed(2)))
   }
 
+  const getPf = (row) => {
+    const pfValue = String(row.pfValue ?? row.pf_value ?? '').trim().toLowerCase()
+    if (row.pfEnabled === true || ['yes', 'y', 'true', '1'].includes(pfValue)) {
+      return Number(Math.min(1800, getDerivedBasicSalary(row) * 0.12).toFixed(2))
+    }
+    return Number(row.pf || 0)
+  }
+
   const getRemainingBalance = (row) => {
     return getStoredOrCalculated(row, ['remaining_balance'], () => Number((getFinalSalary(row) - getDerivedBasicSalary(row)).toFixed(2)))
   }
@@ -162,7 +160,6 @@ function DaysAndInterestsPage() {
   }
   const getReconciledGovernmentRow = (row) => {
     const storedNet = Number(row.saved_final_amount ?? row.net_amount ?? row.final_amount ?? 0)
-    const storedProductionIncentives = Number(row.production_incentives ?? row.productionIncentive ?? row.incentive ?? 0)
     const storedTotalEarnings = Number(row.total_earnings ?? row.totalEarnings ?? 0)
     const storedTotalDeductions = Number(row.total_deductions ?? row.totalDeductions ?? 0)
     const storedPresentDays = Number(row.present_days ?? 0)
@@ -170,7 +167,7 @@ function DaysAndInterestsPage() {
     const totalDays = Math.max(1, Number(row.total_days || 0))
     const baseSourceBasic = getSourceBasicSalary(row)
     const deductions = Number((
-      Number(row.pf || 0) +
+      getPf(row) +
       Number(row.pfvol || 0) +
       getEsi(row) +
       Number(row.tds || 0) +
@@ -233,21 +230,14 @@ function DaysAndInterestsPage() {
       return stored
     }
 
-    const esiValue = String(
-      row.esi_value ??
-      row.esiValue ??
-      esiByEmployeeId.get(String(row.employee_id)) ??
-      esiByEmployeeId.get(String(row.empId)) ??
-      '',
-    ).trim().toLowerCase()
-    if (!['yes', 'y', 'true', '1'].includes(esiValue)) {
+    if ((getSourceBasicSalary(row) * 0.65) > 21000) {
       return 0
     }
     return Number((getDerivedBasicSalary(row) * 0.0075).toFixed(2))
   }
 
   const getDeductionComponents = (row) => Number((
-    Number(row.pf || 0) +
+    getPf(row) +
     Number(row.pfvol || 0) +
     getEsi(row) +
     Number(row.tds || 0) +
@@ -263,7 +253,7 @@ function DaysAndInterestsPage() {
     return Number.isFinite(storedNet) ? storedNet : Number((getTotalEarnings(row) - getDeductionComponents(row)).toFixed(2))
   }
 
-  const getTotalDeductions = (row) => Number((Number(row.pf || 0) + Number(row.pfvol || 0) + getEsi(row) + Number(row.tds || 0) + Number(row.advance_amount || 0) + Number(row.plwf || 0) + Number(row.professional_tax || 0)).toFixed(2))
+  const getTotalDeductions = (row) => Number((getPf(row) + Number(row.pfvol || 0) + getEsi(row) + Number(row.tds || 0) + Number(row.advance_amount || 0) + Number(row.plwf || 0) + Number(row.professional_tax || 0)).toFixed(2))
 
   const downloadGovernmentSalary = () => {
     if (!rows.length) return
@@ -282,7 +272,7 @@ function DaysAndInterestsPage() {
       'Washing Allowance': rounded(getWashingAllowance(row)),
       'Production Incentives': rounded(getReconciledGovernmentRow(row).productionIncentives),
       'Total Earnings': rounded(getTotalEarnings(row)),
-      PF: rounded(row.pf),
+      PF: rounded(getPf(row)),
       PFVOL: rounded(row.pfvol),
       ESI: rounded(getEsi(row)),
       TDS: rounded(row.tds),
@@ -327,7 +317,7 @@ function DaysAndInterestsPage() {
         'Washing Allowance': rounded(reconciled.washingAllowance),
         'Production Incentives': rounded(reconciled.productionIncentives),
         'Total Earnings': rounded(reconciled.totalEarnings),
-        PF: rounded(row.pf),
+        PF: rounded(getPf(row)),
         PFVOL: rounded(row.pfvol),
         ESI: rounded(getEsi(row)),
         TDS: rounded(row.tds),
@@ -396,7 +386,7 @@ function DaysAndInterestsPage() {
             <table>
               <thead>
                 <tr>
-                  <th className="sticky-col sticky-col-1">S.No</th><th className="sticky-col sticky-col-2">Employee ID</th><th className="sticky-col sticky-col-3">Employee Name</th><th>Father&apos;s Name</th><th>Days (Present/Total)</th><th>Source Basic Salary</th><th>Final Salary</th><th>Basic Salary</th>
+                  <th className="sticky-col sticky-col-1">S.No</th><th className="sticky-col sticky-col-2">Employee ID</th><th className="sticky-col sticky-col-3">Employee Name</th><th>Father&apos;s Name</th><th>Company</th><th>Days (Present/Total)</th><th>Source Basic Salary</th><th>Final Salary</th><th>Basic Salary</th>
                   <th>HRA</th><th>TA</th><th>Washing Allowance</th><th>Production Incentives</th><th>Total Earnings</th>
                   <th>PF</th><th>PFVOL</th><th>ESI</th><th>TDS</th><th>Advance</th><th>PLWF</th><th>PROF. TAX</th><th>Total Deductions</th><th>Net Amount</th><th>Extra Absent Days</th>
                 </tr>
@@ -404,9 +394,9 @@ function DaysAndInterestsPage() {
               <tbody>
                 {paginatedRows.map((row) => (
                   <tr key={row.id}>
-                    <td className="sticky-col sticky-col-1">{row.sno}</td><td className="sticky-col sticky-col-2">{row.empId}</td><td className="sticky-col sticky-col-3">{row.employeeName}</td><td>{row.fatherName}</td><td>{Math.round(Number(row.present_days || 0))} / {Math.round(Number(row.total_days || 0))}</td><td>{money(getSourceBasicSalary(row))}</td><td>{money(getFinalSalary(row))}</td><td>{money(getDerivedBasicSalary(row))}</td>
+                    <td className="sticky-col sticky-col-1">{row.sno}</td><td className="sticky-col sticky-col-2">{row.empId}</td><td className="sticky-col sticky-col-3">{row.employeeName}</td><td>{row.fatherName}</td><td>{row.company || ''}</td><td>{Math.round(Number(row.present_days || 0))} / {Math.round(Number(row.total_days || 0))}</td><td>{money(getSourceBasicSalary(row))}</td><td>{money(getFinalSalary(row))}</td><td>{money(getDerivedBasicSalary(row))}</td>
                     <td>{money(getHra(row))}</td><td>{money(getTa(row))}</td><td>{money(getWashingAllowance(row))}</td><td>{money(getReconciledGovernmentRow(row).productionIncentives)}</td><td className="earnings-cell">{money(getTotalEarnings(row))}</td>
-                    <td className="deductions-cell">{money(row.pf)}</td><td className="deductions-cell">{money(row.pfvol)}</td><td className="deductions-cell">{money(getEsi(row))}</td><td className="deductions-cell">{money(row.tds)}</td><td className="deductions-cell">{money(row.advance_amount)}</td><td className="deductions-cell">{money(row.plwf)}</td><td className="deductions-cell">{money(row.professional_tax)}</td><td className="deductions-cell">{money(getTotalDeductions(row))}</td><td>{money(getNetAmount(row))}</td>
+                    <td className="deductions-cell">{money(getPf(row))}</td><td className="deductions-cell">{money(row.pfvol)}</td><td className="deductions-cell">{money(getEsi(row))}</td><td className="deductions-cell">{money(row.tds)}</td><td className="deductions-cell">{money(row.advance_amount)}</td><td className="deductions-cell">{money(row.plwf)}</td><td className="deductions-cell">{money(row.professional_tax)}</td><td className="deductions-cell">{money(getTotalDeductions(row))}</td><td>{money(getNetAmount(row))}</td>
                     <td>{money(getReconciledGovernmentRow(row).extraAbsentDays)}</td></tr>
                 ))}
                 {!paginatedRows.length ? <tr><td colSpan="26" className="empty-state-cell">No Government Salary snapshot records are available for this finalized month.</td></tr> : null}

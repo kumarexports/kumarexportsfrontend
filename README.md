@@ -86,7 +86,7 @@ npm run dev
 - If ports are already in use, Vite and Express may choose alternate ports, so verify the actual URLs in the terminal output.
 - The dashboard now shows the last finalized month snapshot and attendance percentages.
 - Employee distribution uses unique `empId` values before calculating department totals and percentages.
-- The master upload now stores the uploaded master row data directly in `tbl_employees`, splits the uploaded BASIC into salary components, and validates the derived basic salary rule.
+- The master upload stores the uploaded master row data directly in `tbl_employees` and splits the uploaded BASIC into salary components without a minimum salary validation.
 - Imported master data is now read back from the database columns instead of relying only on the temporary file preview.
 - Saturday attendance saves now generate the following Sunday attendance automatically.
 - HR Summary exports styled Excel files with filters, column widths, and a `Week Off` label when an absent row has no leave category.

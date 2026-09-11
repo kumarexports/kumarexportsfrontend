@@ -78,7 +78,7 @@ The SalaryBreakupsPage uses xlsx to read workbook data.
 - It also attempts to load a sample workbook from the public folder at /KACL MAY-2026 FINAL.xlsx.
 - The Masters employee upload expects `S.No.`, `Emp ID`, `Name`, `Father's Name`, `Department`, `MRATE`, `BASIC`, `PF`, `PFVOL`, `ESI`, `TDS`, and `PROF.TAX`.
 - Uploaded rows are stored in `tbl_employees` as individual columns for master viewing, and the Imported tab reads those saved columns back from the database.
-- Uploaded `BASIC` is split into salary components and validated so the derived basic salary never falls below ₹15,075.
+- Uploaded `BASIC` is split into salary components without a minimum salary validation.
 - Direct Salary Calculation uses the imported workbook target net amount as the reconciliation target, not the already stored display net alone.
 - The report prefers OT Allowance and Incentive to fill positive gaps; if the calculated amount is too high, it reduces Present Days / Extra Days Absent first.
 

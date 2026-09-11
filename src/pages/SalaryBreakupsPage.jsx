@@ -119,7 +119,12 @@ const resolveMasterDeduction = (rawValue, basicSalary) => {
   return Number(numeric.toFixed(2))
 }
 
-const resolvePfDeduction = (rawValue, basicSalary) => resolveMasterDeduction(rawValue, basicSalary)
+const resolvePfDeduction = (rawValue, basicSalary) => {
+  if (normalizeYesNo(rawValue)) {
+    return Number(Math.min(1800, basicSalary * 0.12).toFixed(2))
+  }
+  return 0
+}
 
 const getTargetMonthYear = (monthName, year) => {
   const monthNumber = monthNumberMap[monthName]
@@ -139,6 +144,7 @@ function SalaryBreakupsPage() {
   const [attendanceSummary, setAttendanceSummary] = useState([])
   const [savedRows, setSavedRows] = useState([])
   const [selectedDepartment, setSelectedDepartment] = useState('all')
+  const [selectedCompany, setSelectedCompany] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [swalState, setSwalState] = useState({ open: false, title: '', text: '', kind: 'success' })
   const [currentPage, setCurrentPage] = useState(1)
@@ -237,7 +243,7 @@ function SalaryBreakupsPage() {
 
     return employeeRows
       .filter((employee) => {
-        const employeeKey = String(employee.empId || employee.id)
+        const employeeKey = `${String(employee.company || '').trim().toLowerCase()}::${String(employee.empId || employee.id)}`
         if (seenEmployeeIds.has(employeeKey)) {
           return false
         }
@@ -265,15 +271,14 @@ function SalaryBreakupsPage() {
       const otAmount = calculateOtAmount(mRate, overtimeHours, totalDays)
       const total = Number((daysAmount + otAmount).toFixed(2))
       const plwf = 5
-      const pfValue = employee.pfValue ?? employee.pf_value ?? null
+      const pfValue = employee.pfValue ?? employee.pf_value ?? employee.importData?.deductions?.pf?.raw ?? null
       const pfVolValue = employee.pfvolValue ?? employee.pfvol_value ?? importedData.PFVOL ?? importedData.pfVol
-      const esiValue = employee.esiValue ?? employee.esi_value ?? importedData.ESI ?? importedData.esi
       const profTaxValue = employee.profTaxValue ?? employee.prof_tax_value ?? importedData['PROF.TAX'] ?? importedData.profTax
-      const pfFromMaster = resolvePfDeduction(pfValue, basicSalary)
+      const pfFromMaster = resolvePfDeduction(pfValue, derivedBasicSalary)
       const pfFromImport = readImportedPositiveNumber(importedData, ['PF']) || 0
       const pf = pfFromMaster || pfFromImport
       const pfVol = resolveMasterDeduction(pfVolValue ?? readImportedNumber(importedData, ['PF VOL', 'PFVOL', 'PF_VOL']), basicSalary)
-      const esi = normalizeYesNo(esiValue)
+      const esi = (basicSalary * 0.65) <= 21000
         ? Number((derivedBasicSalary * 0.0075).toFixed(2))
         : 0
       const profTax = resolveMasterDeduction(profTaxValue ?? readImportedNumber(importedData, ['PROF. TAX', 'PROF TAX', 'Professional Tax']), basicSalary)
@@ -320,10 +325,11 @@ function SalaryBreakupsPage() {
     const departmentFilter = selectedDepartment.toLowerCase()
 
     return enrichedRows.filter((row) => {
+      const matchesCompany = selectedCompany === 'all' || String(row.company || '').toLowerCase() === selectedCompany.toLowerCase()
       const matchesDepartment =
         departmentFilter === 'all' || String(row.department || '').toLowerCase() === departmentFilter
 
-      if (!matchesDepartment) {
+      if (!matchesCompany || !matchesDepartment) {
         return false
       }
 
@@ -351,7 +357,7 @@ function SalaryBreakupsPage() {
 
       return searchValues.some((value) => String(value ?? '').toLowerCase().includes(query))
     })
-  }, [enrichedRows, searchTerm, selectedDepartment])
+  }, [enrichedRows, searchTerm, selectedCompany, selectedDepartment])
 
   const totalPages = Math.max(1, Math.ceil(visibleRows.length / pageSize))
   const paginatedRows = useMemo(
@@ -361,7 +367,7 @@ function SalaryBreakupsPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedMonth, selectedYear, selectedDepartment, searchTerm, employeeRows.length])
+  }, [selectedMonth, selectedYear, selectedCompany, selectedDepartment, searchTerm, employeeRows.length])
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -380,6 +386,11 @@ function SalaryBreakupsPage() {
 
     return ['all', ...departments]
   }, [employeeRows])
+
+  const companyOptions = useMemo(
+    () => ['all', ...Array.from(new Set(employeeRows.map((employee) => String(employee.company || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b))],
+    [employeeRows],
+  )
 
 
   const downloadSalaryBreakups = () => {
@@ -606,6 +617,12 @@ function SalaryBreakupsPage() {
         </div>
 
         <div className="filters-row" style={{ marginBottom: '1rem' }}>
+          <div className="select-group" style={{ minWidth: '220px' }}>
+            <label htmlFor="salary-company-filter">Company</label>
+            <select id="salary-company-filter" value={selectedCompany} onChange={(event) => setSelectedCompany(event.target.value)}>
+              {companyOptions.map((company) => <option key={company} value={company}>{company === 'all' ? 'All Companies' : company}</option>)}
+            </select>
+          </div>
           <div className="select-group" style={{ minWidth: '240px' }}>
             <label htmlFor="salary-department-filter">Department</label>
             <select
@@ -644,6 +661,7 @@ function SalaryBreakupsPage() {
                 <th className="sticky-col sticky-col-2" rowSpan="2">Emp ID</th>
                 <th className="sticky-col sticky-col-3" rowSpan="2">Employee Name</th>
                 <th rowSpan="2">Father&apos;s Name</th>
+                <th rowSpan="2">Company</th>
                 <th rowSpan="2">Department</th>
                 <th rowSpan="2">MRate</th>
                 <th rowSpan="2">Basic Salary</th>
@@ -678,6 +696,7 @@ function SalaryBreakupsPage() {
                     <td className="sticky-col sticky-col-2">{row.empId}</td>
                     <td className="sticky-col sticky-col-3">{row.employeeName}</td>
                     <td>{row.fatherName}</td>
+                    <td>{row.company || ''}</td>
                     <td>{row.department}</td>
                     <td>{Number.isFinite(row.mRate) ? row.mRate.toFixed(2) : ''}</td>
                     <td>{row.basicSalary ? row.basicSalary.toFixed(2) : ''}</td>
