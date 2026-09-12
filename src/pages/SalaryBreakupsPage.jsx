@@ -404,6 +404,7 @@ function SalaryBreakupsPage() {
       'Emp ID': row.empId,
       'Employee Name': row.employeeName,
       "Father's Name": row.fatherName,
+      Company: row.company,
       Department: row.department,
       MRate: rounded(row.mRate),
       'Basic Salary': rounded(row.basicSalary),
@@ -427,7 +428,7 @@ function SalaryBreakupsPage() {
     }))
     const worksheet = XLSX.utils.json_to_sheet(exportRows)
     applyExcelTableStyle(worksheet, Object.keys(exportRows[0] || {}).length, exportRows.length, {
-      widths: [8, 12, 22, 18, 18, 12, 14, 14, 12, 12, 14, 12, 12, 14, 14, 14, 12, 12, 14, 12, 14, 14, 14, 14, 14],
+      widths: [8, 12, 22, 18, 18, 18, 12, 14, 14, 12, 12, 14, 12, 12, 14, 14, 14, 12, 12, 14, 12, 14, 14, 14, 14, 14],
       headerFill: 'D9EAF7',
       headerFont: '173F73',
     })

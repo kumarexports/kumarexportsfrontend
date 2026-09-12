@@ -263,6 +263,7 @@ function DaysAndInterestsPage() {
       'Employee ID': row.empId,
       'Employee Name': row.employeeName,
       "Father's Name": row.fatherName,
+      Company: row.company || '',
       'Days (Present/Total)': `${rounded(row.present_days)} / ${rounded(row.total_days)}`,
       'Source Basic Salary': rounded(getSourceBasicSalary(row)),
       'Final Salary': rounded(getFinalSalary(row)),
@@ -285,7 +286,7 @@ function DaysAndInterestsPage() {
     }))
     const worksheet = XLSX.utils.json_to_sheet(exportRows)
     applyExcelTableStyle(worksheet, Object.keys(exportRows[0] || {}).length, exportRows.length, {
-      widths: [8, 12, 22, 18, 14, 14, 14, 14, 12, 14, 12, 12, 14, 12, 12, 12, 12, 12, 12, 14, 14, 14, 14, 14, 14],
+      widths: [8, 12, 22, 18, 18, 14, 14, 14, 14, 12, 14, 12, 12, 14, 12, 12, 12, 12, 12, 12, 14, 14, 14, 14, 14, 14],
       headerFill: 'F6E4E1',
       headerFont: '173F73',
     })
