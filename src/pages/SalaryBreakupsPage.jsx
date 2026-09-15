@@ -21,7 +21,6 @@ const monthNumberMap = {
   March: 3,
 }
 const years = Array.from({ length: 11 }, (_, index) => new Date().getFullYear() + index)
-const monthLabel = (monthNumber) => Object.entries(monthNumberMap).find(([, value]) => value === Number(monthNumber))?.[0] || ''
 
 const fetchJson = async (url, options) => {
   const token = JSON.parse(localStorage.getItem('kumarexports-auth-user') || '{}')?.token
@@ -701,8 +700,8 @@ function SalaryBreakupsPage() {
                     <td>{row.department}</td>
                     <td>{Number.isFinite(row.mRate) ? row.mRate.toFixed(2) : ''}</td>
                     <td>{row.basicSalary ? row.basicSalary.toFixed(2) : ''}</td>
-                    <td>{monthLabel(row.month) || selectedMonth}</td>
-                    <td>{row.year || selectedYear}</td>
+                    <td>{selectedMonth}</td>
+                    <td>{selectedYear}</td>
                     <td>{row.presentDays}</td>
                     <td>{row.totalDays}</td>
                     <td>{row.overtimeHours.toFixed(2)}</td>
