@@ -394,7 +394,7 @@ function SalaryBreakupsPage() {
       showSwal('Nothing to download', `No Salary Breakups records are available for ${selectedMonth} ${selectedYear}.`, 'error')
       return
     }
-    const rounded = (value) => Math.round(Number(value || 0))
+    const rounded = (value) => Number((Number(value || 0)).toFixed(2))
     const exportRows = enrichedRows.map((row, index) => ({
       'S.No': index + 1,
       'Emp ID': row.empId,
