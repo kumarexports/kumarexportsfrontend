@@ -395,8 +395,8 @@ function SalaryBreakupsPage() {
       return
     }
     const rounded = (value) => Math.round(Number(value || 0))
-    const exportRows = enrichedRows.map((row) => ({
-      'S.No': row.sno,
+    const exportRows = enrichedRows.map((row, index) => ({
+      'S.No': index + 1,
       'Emp ID': row.empId,
       'Employee Name': row.employeeName,
       "Father's Name": row.fatherName,
@@ -689,7 +689,7 @@ function SalaryBreakupsPage() {
               {paginatedRows.length > 0 ? (
                 paginatedRows.map((row, index) => (
                   <tr key={`${row.empId || row.id || index}`}>
-                    <td className="sticky-col sticky-col-1">{row.sno || index + 1}</td>
+                    <td className="sticky-col sticky-col-1">{(currentPage - 1) * pageSize + index + 1}</td>
                     <td className="sticky-col sticky-col-2">{row.empId}</td>
                     <td className="sticky-col sticky-col-3">{row.employeeName}</td>
                     <td>{row.fatherName}</td>
