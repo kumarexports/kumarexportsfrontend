@@ -409,9 +409,9 @@ function SalaryBreakupsPage() {
       'Present Days': rounded(row.presentDays),
       'Total Days': rounded(row.totalDays),
       'OT Hours': rounded(row.overtimeHours),
-      'Days Amount': rounded(row.daysAmount),
-      'OT Amount': rounded(row.otAmount),
-      'Total Earnings': rounded(row.total),
+      'Days Amount': rounded(calculateDaysAmount(row.mRate, row.presentDays, row.totalDays)),
+      'OT Amount': rounded(calculateOtAmount(row.mRate, row.overtimeHours, row.totalDays)),
+      'Total Earnings': rounded(calculateDaysAmount(row.mRate, row.presentDays, row.totalDays) + calculateOtAmount(row.mRate, row.overtimeHours, row.totalDays)),
       PLWF: rounded(row.plwf),
       PF: rounded(row.pf),
       'Prof. Tax': rounded(row.profTax),
@@ -702,9 +702,9 @@ function SalaryBreakupsPage() {
                     <td>{row.presentDays}</td>
                     <td>{row.totalDays}</td>
                     <td>{row.overtimeHours.toFixed(2)}</td>
-                    <td className="earnings-cell">{row.daysAmount.toFixed(2)}</td>
-                    <td className="earnings-cell">{row.otAmount.toFixed(2)}</td>
-                    <td className="earnings-cell">{row.total.toFixed(2)}</td>
+                    <td className="earnings-cell">{calculateDaysAmount(row.mRate, row.presentDays, row.totalDays).toFixed(2)}</td>
+                    <td className="earnings-cell">{calculateOtAmount(row.mRate, row.overtimeHours, row.totalDays).toFixed(2)}</td>
+                    <td className="earnings-cell">{(calculateDaysAmount(row.mRate, row.presentDays, row.totalDays) + calculateOtAmount(row.mRate, row.overtimeHours, row.totalDays)).toFixed(2)}</td>
                     <td className="deductions-cell">{row.plwf.toFixed(2)}</td>
                     <td className="deductions-cell">{row.pf.toFixed(2)}</td>
                     <td className="deductions-cell">{row.profTax.toFixed(2)}</td>
