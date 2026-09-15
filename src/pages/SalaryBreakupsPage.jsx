@@ -127,10 +127,7 @@ const resolvePfDeduction = (rawValue, basicSalary) => {
 
 const getTargetMonthYear = (monthName, year) => {
   const monthNumber = monthNumberMap[monthName]
-  const targetMonthNumber = monthNumber === 1 ? 12 : monthNumber - 1
-  const targetYear = monthNumber === 1 ? year - 1 : year
-  const targetMonthName = Object.keys(monthNumberMap).find((name) => monthNumberMap[name] === targetMonthNumber)
-  return { targetMonthNumber, targetYear, targetMonthName }
+  return { targetMonthNumber: monthNumber, targetYear: year, targetMonthName: monthName }
 }
 
 function SalaryBreakupsPage() {
