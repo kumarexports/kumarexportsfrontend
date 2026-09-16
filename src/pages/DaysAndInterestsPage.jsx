@@ -111,6 +111,7 @@ function DaysAndInterestsPage() {
   }
 
   const getFinalSalary = (row) => {
+    if (Number(row.present_days ?? 0) <= 0) return 0
     const storedFinal = Number(
       row.final_salary ??
       row.saved_final_amount ??
@@ -159,7 +160,10 @@ function DaysAndInterestsPage() {
     return getStoredOrCalculated(row, ['washing_allowance', 'washingAllowance'], () => Number((getRemainingBalance(row) * 0.12).toFixed(2)))
   }
   const getReconciledGovernmentRow = (row) => {
-    const storedNet = Number(row.saved_final_amount ?? row.net_amount ?? row.final_amount ?? 0)
+    const sourcePresentDays = Number(row.present_days ?? 0)
+    const storedNet = sourcePresentDays <= 0
+      ? 0
+      : Number(row.saved_final_amount ?? row.net_amount ?? row.final_amount ?? 0)
     const storedTotalEarnings = Number(row.total_earnings ?? row.totalEarnings ?? 0)
     const storedTotalDeductions = Number(row.total_deductions ?? row.totalDeductions ?? 0)
     const storedPresentDays = Number(row.present_days ?? 0)
@@ -249,6 +253,7 @@ function DaysAndInterestsPage() {
   const getTotalEarnings = (row) => Number(getReconciledGovernmentRow(row).totalEarnings.toFixed(2))
 
   const getNetAmount = (row) => {
+    if (Number(row.present_days ?? 0) <= 0) return 0
     const storedNet = Number(row.saved_final_amount ?? row.net_amount ?? row.final_amount ?? 0)
     return Number.isFinite(storedNet) ? storedNet : Number((getTotalEarnings(row) - getDeductionComponents(row)).toFixed(2))
   }
