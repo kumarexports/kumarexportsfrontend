@@ -274,7 +274,8 @@ function SalaryBreakupsPage() {
       const pfFromImport = readImportedPositiveNumber(importedData, ['PF']) || 0
       const pf = pfFromMaster || pfFromImport
       const pfVol = resolveMasterDeduction(pfVolValue ?? readImportedNumber(importedData, ['PF VOL', 'PFVOL', 'PF_VOL']), basicSalary)
-      const esi = (basicSalary * 0.65) <= 21000
+      const esiEnabled = normalizeYesNo(employee.esiValue ?? employee.esi_value ?? employee.importData?.deductions?.esi?.raw)
+      const esi = esiEnabled
         ? Number((derivedBasicSalary * 0.0075).toFixed(2))
         : 0
       const profTax = resolveMasterDeduction(profTaxValue ?? readImportedNumber(importedData, ['PROF. TAX', 'PROF TAX', 'Professional Tax']), basicSalary)

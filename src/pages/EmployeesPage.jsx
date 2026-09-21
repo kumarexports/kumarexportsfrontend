@@ -15,6 +15,7 @@ const REQUIRED_HEADERS = [
   'Gross Salary',
   'PF',
   'PFVOL',
+  'ESI',
   'TDS',
   'PROF.TAX',
 ]
@@ -71,6 +72,44 @@ function EmployeesPage() {
     }
   }
 
+  const updateEmployeeEsi = async (row, esiValue) => {
+    setRows((current) => current.map((item) => item === row ? { ...item, esi: esiValue } : item))
+    const employee = employees.find((item) => String(item.empId) === String(row.empId) && String(item.company || '').trim() === String(row.company || '').trim())
+    if (!employee?.id) return
+    try {
+      const token = JSON.parse(localStorage.getItem('kumarexports-auth-user') || '{}')?.token
+      const response = await fetch(`${API_URL}/api/hr/employees/${employee.id}/esi`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ esi: esiValue }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to update ESI value.')
+      await loadEmployees()
+    } catch (err) {
+      setSwal({ open: true, title: 'Update Failed', text: err.message || 'Unable to update ESI value.', kind: 'error' })
+    }
+  }
+
+  const updateEmployeePf = async (row, pfValue) => {
+    setRows((current) => current.map((item) => item === row ? { ...item, pf: pfValue } : item))
+    const employee = employees.find((item) => String(item.empId) === String(row.empId) && String(item.company || '').trim() === String(row.company || '').trim())
+    if (!employee?.id) return
+    try {
+      const token = JSON.parse(localStorage.getItem('kumarexports-auth-user') || '{}')?.token
+      const response = await fetch(`${API_URL}/api/hr/employees/${employee.id}/pf`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ pf: pfValue }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to update PF value.')
+      await loadEmployees()
+    } catch (err) {
+      setSwal({ open: true, title: 'Update Failed', text: err.message || 'Unable to update PF value.', kind: 'error' })
+    }
+  }
+
   const importEmployees = async (event) => {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -119,6 +158,7 @@ function EmployeesPage() {
           basic: normalizeNumber(record['Gross Salary']),
           pf: normalizeYesNo(record.PF),
           pfvol: normalizeNumber(record.PFVOL),
+          esi: normalizeYesNo(record.ESI),
           tds: normalizeNumber(record.TDS),
           profTax: normalizeNumber(record['PROF.TAX']),
         }
@@ -126,6 +166,11 @@ function EmployeesPage() {
 
       if (!importedRows.length) {
         throw new Error('No valid employee rows were found in the uploaded file.')
+      }
+
+      const invalidSalary = importedRows.find((row) => row.basic < 21536)
+      if (invalidSalary) {
+        throw new Error(`${invalidSalary.empId || invalidSalary.name}: Gross Salary must be at least ₹21,536.`)
       }
 
       setUploading(true)
@@ -149,6 +194,7 @@ function EmployeesPage() {
             basic: row.basic,
             pf: row.pf,
             pfvol: row.pfvol,
+            esi: row.esi,
             tds: row.tds,
             profTax: row.profTax,
           })),
@@ -421,6 +467,7 @@ function EmployeesPage() {
                   <th>Gross Salary</th>
                   <th>PF</th>
                   <th>PFVOL</th>
+                  <th>ESI</th>
                   <th>TDS</th>
                   <th>PROF.TAX</th>
                 </tr>
@@ -448,8 +495,19 @@ function EmployeesPage() {
                       <td>{row.company}</td>
                       <td>{row.mrate ?? ''}</td>
                       <td>{row.basic ?? ''}</td>
-                      <td>{row.pf ?? ''}</td>
+                      <td>
+                        <select value={row.pf || 'No'} onChange={(event) => void updateEmployeePf(row, event.target.value)}>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      </td>
                       <td>{row.pfvol ?? ''}</td>
+                      <td>
+                        <select value={row.esi || 'No'} onChange={(event) => void updateEmployeeEsi(row, event.target.value)}>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      </td>
                       <td>{row.tds ?? ''}</td>
                       <td>{row.profTax ?? ''}</td>
                     </tr>
