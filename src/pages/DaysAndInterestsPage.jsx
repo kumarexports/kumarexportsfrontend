@@ -303,7 +303,7 @@ function DaysAndInterestsPage() {
 
   const downloadSaralSalary = () => {
     if (!rows.length) return
-    const rounded = (value) => Math.round(Number(value || 0))
+    const rounded = (value) => Number((Number(value || 0)).toFixed(2))
     const exportRows = rows.map((row) => {
       const reconciled = getReconciledGovernmentRow(row)
       const employeeMeta = employeeMetaById.get(String(row.employee_id)) || employeeMetaById.get(String(row.empId)) || {}
