@@ -307,6 +307,8 @@ function DaysAndInterestsPage() {
     const exportRows = rows.map((row) => {
       const reconciled = getReconciledGovernmentRow(row)
       const employeeMeta = employeeMetaById.get(String(row.employee_id)) || employeeMetaById.get(String(row.empId)) || {}
+      const sourceBasicSalary = getSourceBasicSalary(row)
+      const finalBasicSalary = Number((sourceBasicSalary * (reconciled.presentDays / Math.max(1, Number(row.total_days || 0)))).toFixed(2))
       return {
         'S.No': row.sno,
         'Employee ID': row.empId,
@@ -316,8 +318,8 @@ function DaysAndInterestsPage() {
         Department: employeeMeta.department || row.department || '',
         'Total Days': rounded(row.total_days),
         'Present Days': rounded(reconciled.presentDays),
-        'Source Basic Salary': rounded(getSourceBasicSalary(row)),
-        'Final Basic Salary': rounded(reconciled.finalSalary),
+        'Source Basic Salary': rounded(sourceBasicSalary),
+        'Final Basic Salary': rounded(finalBasicSalary),
         'Basic Salary': rounded(reconciled.basicSalary),
         HRA: rounded(reconciled.hra),
         TA: rounded(reconciled.ta),
