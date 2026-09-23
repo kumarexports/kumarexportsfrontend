@@ -110,7 +110,8 @@ function DaysAndInterestsPage() {
     return fallbackCalculator(row)
   }
 
-  const getPresentDays = (row) => Number(row.present_days ?? row.presentDays ?? row.source_present_days ?? 0)
+const getPresentDays = (row) => Number(row.present_days ?? row.presentDays ?? row.source_present_days ?? 0)
+const formatDays = (value) => Number((Number(value || 0)).toFixed(1))
 
   const getFinalSalary = (row) => {
     if (getPresentDays(row) <= 0) return 0
@@ -270,7 +271,7 @@ function DaysAndInterestsPage() {
       'Employee Name': row.employeeName,
       "Father's Name": row.fatherName,
       Company: row.company || '',
-      'Days (Present/Total)': `${rounded(row.present_days)} / ${rounded(row.total_days)}`,
+      'Days (Present/Total)': `${formatDays(row.present_days).toFixed(1)} / ${formatDays(row.total_days).toFixed(1)}`,
       'Source Basic Salary': rounded(getSourceBasicSalary(row)),
       'Final Salary': rounded(getFinalSalary(row)),
       'Basic Salary': rounded(getDerivedBasicSalary(row)),
@@ -316,8 +317,8 @@ function DaysAndInterestsPage() {
         "Father's Name": row.fatherName,
         Company: employeeMeta.company || row.company || '',
         Department: employeeMeta.department || row.department || '',
-        'Total Days': rounded(row.total_days),
-        'Present Days': rounded(reconciled.presentDays),
+        'Total Days': formatDays(row.total_days),
+        'Present Days': formatDays(reconciled.presentDays),
         'Source Basic Salary': rounded(sourceBasicSalary),
         'Final Basic Salary': rounded(finalBasicSalary),
         'Basic Salary': rounded(reconciled.basicSalary),
@@ -403,7 +404,7 @@ function DaysAndInterestsPage() {
               <tbody>
                 {paginatedRows.map((row) => (
                   <tr key={row.id}>
-                    <td className="sticky-col sticky-col-1">{row.sno}</td><td className="sticky-col sticky-col-2">{row.empId}</td><td className="sticky-col sticky-col-3">{row.employeeName}</td><td>{row.fatherName}</td><td>{row.company || ''}</td><td>{Math.round(Number(row.present_days || 0))} / {Math.round(Number(row.total_days || 0))}</td><td>{money(getSourceBasicSalary(row))}</td><td>{money(getFinalSalary(row))}</td><td>{money(getDerivedBasicSalary(row))}</td>
+                    <td className="sticky-col sticky-col-1">{row.sno}</td><td className="sticky-col sticky-col-2">{row.empId}</td><td className="sticky-col sticky-col-3">{row.employeeName}</td><td>{row.fatherName}</td><td>{row.company || ''}</td><td>{formatDays(row.present_days).toFixed(1)} / {formatDays(row.total_days).toFixed(1)}</td><td>{money(getSourceBasicSalary(row))}</td><td>{money(getFinalSalary(row))}</td><td>{money(getDerivedBasicSalary(row))}</td>
                     <td>{money(getHra(row))}</td><td>{money(getTa(row))}</td><td>{money(getWashingAllowance(row))}</td><td>{money(getReconciledGovernmentRow(row).productionIncentives)}</td><td className="earnings-cell">{money(getTotalEarnings(row))}</td>
                     <td className="deductions-cell">{money(getPf(row))}</td><td className="deductions-cell">{money(row.pfvol)}</td><td className="deductions-cell">{money(getEsi(row))}</td><td className="deductions-cell">{money(row.tds)}</td><td className="deductions-cell">{money(row.advance_amount)}</td><td className="deductions-cell">{money(row.plwf)}</td><td className="deductions-cell">{money(row.professional_tax)}</td><td className="deductions-cell">{money(getTotalDeductions(row))}</td><td>{money(getNetAmount(row))}</td>
                     <td>{money(getReconciledGovernmentRow(row).extraAbsentDays)}</td></tr>
