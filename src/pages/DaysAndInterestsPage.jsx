@@ -142,7 +142,7 @@ const formatDays = (value) => Number((Number(value || 0)).toFixed(1))
   const getPf = (row) => {
     const pfValue = String(row.pfValue ?? row.pf_value ?? '').trim().toLowerCase()
     if (row.pfEnabled === true || ['yes', 'y', 'true', '1'].includes(pfValue)) {
-      return Number(Math.min(1800, getDerivedBasicSalary(row) * 0.12).toFixed(2))
+      return Number(Math.min(3000, getDerivedBasicSalary(row) * 0.12).toFixed(2))
     }
     return Number(row.pf || 0)
   }

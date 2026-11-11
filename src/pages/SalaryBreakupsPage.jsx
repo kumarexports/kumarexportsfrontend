@@ -120,7 +120,7 @@ const resolveMasterDeduction = (rawValue, basicSalary) => {
 
 const resolvePfDeduction = (rawValue, basicSalary) => {
   if (normalizeYesNo(rawValue)) {
-    return Number(Math.min(1800, basicSalary * 0.12).toFixed(2))
+    return Number(Math.min(3000, basicSalary * 0.12).toFixed(2))
   }
   return 0
 }
