@@ -197,6 +197,7 @@ function AdvancesPage() {
         row.empId,
         row.employeeName,
         row.fatherName,
+        row.company,
         row.department,
         row.calculatedSalary,
         row.advance_amount ?? row.advance,
@@ -256,9 +257,9 @@ function AdvancesPage() {
           company: String(values.company ?? '').trim(),
           advance: extractNumber(values.advance),
         }
-      }).filter((row) => row.empId && row.name && row.advance >= 0)
+      }).filter((row) => row.empId && row.name && row.company && row.advance >= 0)
 
-      if (!rows.length) throw new Error('No valid rows found. Required headers are EmpID, Name and Advance.')
+      if (!rows.length) throw new Error('No valid rows found. Required headers are EmpID, Name, Company and Advance.')
 
       const { response: employeesResponse, data: employeesData } = await fetchJson(`${API_URL}/api/hr/employees`)
       if (!employeesResponse.ok || !employeesData.ok) {
@@ -395,6 +396,7 @@ function AdvancesPage() {
                 <th>EmpId</th>
                 <th>Name</th>
                 <th>Father&apos;s Name</th>
+                <th>Company</th>
                 <th>Current Advance</th>
               </tr>
             </thead>
@@ -405,11 +407,12 @@ function AdvancesPage() {
                   <td>{row.empId}</td>
                   <td>{row.employeeName}</td>
                   <td>{row.fatherName}</td>
+                  <td>{row.company || ''}</td>
                   <td>{Number((row.advance_amount ?? row.advance) || 0).toFixed(2)}</td>
                 </tr>
               )) : (
                 <tr>
-                  <td className="empty-state-cell" colSpan={5}>No advance records available for the selected month.</td>
+                  <td className="empty-state-cell" colSpan={6}>No advance records available for the selected month.</td>
                 </tr>
               )}
             </tbody>

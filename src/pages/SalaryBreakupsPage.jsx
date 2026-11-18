@@ -139,6 +139,7 @@ function SalaryBreakupsPage() {
   const [employeeRows, setEmployeeRows] = useState([])
   const [attendanceSummary, setAttendanceSummary] = useState([])
   const [savedRows, setSavedRows] = useState([])
+  const [advanceRows, setAdvanceRows] = useState([])
   const [selectedDepartment, setSelectedDepartment] = useState('all')
   const [selectedCompany, setSelectedCompany] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -169,10 +170,12 @@ function SalaryBreakupsPage() {
       { response: empResponse, data: empData },
       { response: attResponse, data: attData },
       { response: savedResponse, data: savedData },
+      { response: advanceResponse, data: advanceData },
     ] = await Promise.all([
       fetchJson(`${API_URL}/api/hr/employees`),
       fetchJson(`${API_URL}/api/hr/attendance/summary?month=${selectedMonthNumber}&year=${selectedYear}&throughDate=${selectedMonthLastDate}`),
       fetchJson(`${API_URL}/api/salary-breakups?month=${selectedMonthNumber}&year=${selectedYear}`),
+      fetchJson(`${API_URL}/api/advances?month=${selectedMonthNumber}&year=${selectedYear}`),
     ])
 
     if (!empResponse.ok || !empData.ok) {
@@ -187,9 +190,14 @@ function SalaryBreakupsPage() {
       throw new Error(savedData.error || 'Unable to load saved salary breakups')
     }
 
+    if (!advanceResponse.ok || !advanceData.ok) {
+      throw new Error(advanceData.error || 'Unable to load monthly advances')
+    }
+
     setEmployeeRows(empData.employees || [])
     setAttendanceSummary(attData.summary || [])
     setSavedRows(savedData.rows || [])
+    setAdvanceRows(advanceData.rows || [])
   }
 
   useEffect(() => {
@@ -235,6 +243,7 @@ function SalaryBreakupsPage() {
     )
 
     const savedByEmployeeId = new Map(savedRows.map((entry) => [String(entry.employee_id), entry]))
+    const advanceByEmployeeId = new Map(advanceRows.map((entry) => [String(entry.employee_id), entry]))
     const seenEmployeeIds = new Set()
 
     return employeeRows
@@ -250,6 +259,7 @@ function SalaryBreakupsPage() {
       const presentDays = Number(attendanceByEmployeeId.get(String(employee.id))?.present_days || 0)
       const overtimeHours = Number(attendanceByEmployeeId.get(String(employee.id))?.overtime_hours || 0)
       const savedRow = savedByEmployeeId.get(String(employee.id))
+      const advanceRow = advanceByEmployeeId.get(String(employee.id))
       const importedData = savedRow?.data && typeof savedRow.data === 'object' ? savedRow.data : employee.importData || {}
       const mRate = pickFirstPositive(employee.masterMRate, employee.mrate, employee.mRate, savedRow?.mrate)
       const basicSalary = pickFirstPositive(employee.basicPackage, employee.basicSalary, employee.basic_package, savedRow?.basic_salary, savedRow?.basicPackage)
@@ -279,7 +289,7 @@ function SalaryBreakupsPage() {
         ? Number((derivedBasicSalary * 0.0075).toFixed(2))
         : 0
       const profTax = resolveMasterDeduction(profTaxValue ?? readImportedNumber(importedData, ['PROF. TAX', 'PROF TAX', 'Professional Tax']), basicSalary)
-      const advance = extractNumber(savedRow?.advance_amount || employee.advanceAmount)
+      const advance = extractNumber(advanceRow?.advance ?? advanceRow?.advance_amount ?? savedRow?.advance_amount ?? savedRow?.advance ?? employee.advanceAmount)
       const tds = resolveMasterDeduction(employee.tdsValue ?? employee.tds_value ?? readImportedNumber(importedData, ['TDS']), basicSalary)
       const totalDeductions = Number((plwf + profTax + advance + pf + pfVol + esi + tds).toFixed(2))
       const finalAmount = Math.round(total - totalDeductions)
@@ -315,7 +325,7 @@ function SalaryBreakupsPage() {
         finalAmount,
       }
       })
-  }, [attendanceSummary, employeeRows, savedRows, totalDays, targetMonthNumber, targetMonthYear])
+  }, [advanceRows, attendanceSummary, employeeRows, savedRows, totalDays, targetMonthNumber, targetMonthYear])
 
   const visibleRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase()

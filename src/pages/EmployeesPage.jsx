@@ -265,7 +265,7 @@ function EmployeesPage() {
   const uniqueByEmpId = (list) => {
     const seen = new Set()
     return list.filter((employee) => {
-      const key = String(employee.empId || '').trim()
+      const key = `${String(employee.company || '').trim().toLowerCase()}::${String(employee.empId || '').trim()}`
       if (!key || seen.has(key)) {
         return false
       }
