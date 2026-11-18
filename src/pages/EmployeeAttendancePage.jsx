@@ -88,7 +88,7 @@ function EmployeeAttendancePage() {
       const cleanedRows = rawRows.filter((row) => Array.isArray(row) && row.some((cell) => cell !== '' && cell !== null && cell !== undefined))
       const headerRow = cleanedRows[0] || []
       const headers = headerRow.map(normalizeHeader)
-      const required = ['EmpId', 'Employee Name', 'Present Days', 'OT Hours']
+      const required = ['EmpId', 'Employee Name', 'Company', 'Present Days', 'OT Hours']
       const missing = required.filter((header) => !headers.includes(header))
       if (missing.length) throw new Error(`Missing required columns: ${missing.join(', ')}`)
 
@@ -100,6 +100,7 @@ function EmployeeAttendancePage() {
         return {
           empId: String(record.EmpId ?? record['Emp ID'] ?? '').trim(),
           employeeName: String(record['Employee Name'] ?? '').trim(),
+          company: String(record.Company ?? '').trim(),
           department: String(record.Department ?? '').trim(),
           presentDays: parseNum(record['Present Days']),
           overtimeHours: parseNum(record['OT Hours']),
@@ -149,7 +150,7 @@ function EmployeeAttendancePage() {
         <div>
           <p className="eyebrow">HR Attendance</p>
           <h2>Monthly Attendance Import</h2>
-          <p>Upload files like <strong>Attendance 08-2026.xlsx</strong> with EmpId, Employee Name, Present Days, and OT Hours. Company is not read from the file; it is shown from the employee master record.</p>
+        <p>Upload files like <strong>Attendance 08-2026.xlsx</strong> with EmpId, Employee Name, Company, Present Days, and OT Hours. Employees are matched by Company and EmpId.</p>
         </div>
         {canEdit ? (
           <button type="button" className="secondary-btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>

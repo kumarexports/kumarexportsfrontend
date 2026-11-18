@@ -253,6 +253,7 @@ function AdvancesPage() {
         return {
           empId: String(values.empid ?? '').trim(),
           name: String(values.name ?? '').trim(),
+          company: String(values.company ?? '').trim(),
           advance: extractNumber(values.advance),
         }
       }).filter((row) => row.empId && row.name && row.advance >= 0)
@@ -264,12 +265,23 @@ function AdvancesPage() {
         throw new Error(employeesData.error || 'Unable to validate employee IDs against Masters - Employees.')
       }
 
-      const masterEmployeeIds = new Set(
-        (employeesData.employees || []).map((employee) => String(employee.empId || employee.emp_id || employee.id || '').trim()).filter(Boolean),
-      )
+      const masterEmployees = employeesData.employees || []
+      const masterEmployeeKeys = new Set(masterEmployees.map((employee) => (
+        `${String(employee.company || '').trim().toLowerCase()}::${String(employee.empId || employee.emp_id || employee.id || '').trim()}`
+      )))
+      const masterEmployeeIdCounts = masterEmployees.reduce((counts, employee) => {
+        const empId = String(employee.empId || employee.emp_id || employee.id || '').trim()
+        if (empId) counts.set(empId, (counts.get(empId) || 0) + 1)
+        return counts
+      }, new Map())
       const unmatchedEmpIds = rows
-        .map((row) => row.empId)
-        .filter((empId) => !masterEmployeeIds.has(String(empId).trim()))
+        .filter((row) => {
+          const key = `${row.company.toLowerCase()}::${row.empId}`
+          return row.company
+            ? !masterEmployeeKeys.has(key)
+            : !masterEmployeeIdCounts.has(row.empId) || masterEmployeeIdCounts.get(row.empId) > 1
+        })
+        .map((row) => row.company ? `${row.company} / ${row.empId}` : row.empId)
 
       if (unmatchedEmpIds.length > 0) {
         const uniqueUnmatched = Array.from(new Set(unmatchedEmpIds))
